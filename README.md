@@ -45,22 +45,31 @@ task_vector = TaskVector(pretrained_checkpoint, finetuned_checkpoint)
 Once created, task vectors can be modified and combined through arithmetic operations! For instance, to negate a task vector, simply use the ```-``` operator:
 
 ```python
-neg_task_vector = -task_vector
+# Negating a task vector
+new_task_vector = -task_vector
 ```
 
 To add task vectors, you can use the ```+``` operator, or ```sum```:
 
 ```python
+# Adding two task vectors
+new_task_vector = task_vector_A + task_vector_B
+# Adding multiple task vectors
 new_task_vector = sum(list_of_task_vectors)
 ```
 
 Analogies can be done as simply as:
 
 ```python
-new_task_vector = tv_C + tv_B - tv_A
+# Task analogies
+new_task_vector = task_vector_C + task_vector_B - task_vector_A
 ```
 
 ### Checkpoints
+
+Checkpoints for CLIP ViT-B/32, ViT-B/16 and ViT-L/14 are available on he link below, including fine-tuned checkpoints on eight downstream tasks: Stanford Cars, DTD, EuroSAT, GTSRB, MNIST, RESISC45, SUN397 and SVHN.
+
+[Download here](https://drive.google.com/drive/folders/1u_Tva6x0p6oxu5Eo0ZZsf-520Cc_3MKw?usp=share_link)
 
 ### Examples
 
