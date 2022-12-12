@@ -27,7 +27,7 @@ conda activate task-vectors
 ### Add directory to PYTHONPATH:
 
 ```bash
-cd patching
+cd task_vectors
 export PYTHONPATH="$PYTHONPATH:$PWD"
 ```
 
