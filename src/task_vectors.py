@@ -18,9 +18,7 @@ class TaskVector():
                 finetuned_state_dict = torch.load(finetuned_checkpoint).state_dict()
                 self.vector = {}
                 for key in pretrained_state_dict:
-                    if pretrained_state_dict[key].dtype == torch.int64:
-                        continue
-                    if pretrained_state_dict[key].dtype == torch.uint8:
+                    if pretrained_state_dict[key].dtype in [torch.int64, torch.uint8]:
                         continue
                     self.vector[key] = finetuned_state_dict[key] - pretrained_state_dict[key]
     
@@ -59,6 +57,6 @@ class TaskVector():
                     print(f'Warning: key {key} is present in the pretrained state dict but not in the task vector')
                     continue
                 new_state_dict[key] = pretrained_state_dict[key] + scaling_coef * self.vector[key]
-        pretrained_model.load_state_dict(new_state_dict)
+        pretrained_model.load_state_dict(new_state_dict, strict=False)
         return pretrained_model
 
