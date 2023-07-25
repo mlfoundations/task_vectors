@@ -1,0 +1,22 @@
+[tool.poetry]
+name = "task-vectors-ext"
+version = "0.1.0"
+description = "A project to investigate the extensions of task vectors."
+authors = ["Reza Davari <rezazzr@hotmail.com>"]
+readme = "README.md"
+packages = [{include = "task_vectors_ext"}]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+poethepoet = "^0.21.1"
+open-clip-torch = "2.0.2"
+tqdm = "^4.65.0"
+jupyter = "^1.0.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poe.tasks]
+force-cuda11 = "pip3 install torch==1.9.0+cu111 torchvision==0.10.0+cu111 torchaudio==0.9.0 -f https://download.pytorch.org/whl/torch_stable.html"
