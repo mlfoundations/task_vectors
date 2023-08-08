@@ -12,6 +12,7 @@ poethepoet = "^0.21.1"
 open-clip-torch = "2.0.2"
 tqdm = "^4.65.0"
 jupyter = "^1.0.0"
+black = {extras = ["d"], version = "^23.7.0"}
 
 
 [build-system]
