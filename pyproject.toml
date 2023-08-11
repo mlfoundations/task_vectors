@@ -7,12 +7,14 @@ readme = "README.md"
 packages = [{include = "task_vectors_ext"}]
 
 [tool.poetry.dependencies]
-python = "^3.9"
+python = ">=3.9,<3.13"
 poethepoet = "^0.21.1"
 open-clip-torch = "2.0.2"
 tqdm = "^4.65.0"
 jupyter = "^1.0.0"
 black = {extras = ["d"], version = "^23.7.0"}
+wandb = "^0.15.8"
+scipy = "^1.11.1"
 
 
 [build-system]

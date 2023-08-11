@@ -2,8 +2,7 @@ import os
 
 import torch
 import pickle
-from tqdm import tqdm
-import math
+
 
 import numpy as np
 
@@ -20,6 +19,7 @@ def cosine_lr(optimizer, base_lrs, warmup_length, steps):
     if not isinstance(base_lrs, list):
         base_lrs = [base_lrs for _ in optimizer.param_groups]
     assert len(base_lrs) == len(optimizer.param_groups)
+
     def _lr_adjuster(step):
         for param_group, base_lr in zip(optimizer.param_groups, base_lrs):
             if step < warmup_length:
@@ -29,6 +29,7 @@ def cosine_lr(optimizer, base_lrs, warmup_length, steps):
                 es = steps - warmup_length
                 lr = 0.5 * (1 + np.cos(np.pi * e / es)) * base_lr
             assign_learning_rate(param_group, lr)
+
     return _lr_adjuster
 
 
@@ -39,7 +40,7 @@ def accuracy(output, target, topk=(1,)):
 
 
 def torch_load_old(save_path, device=None):
-    with open(save_path, 'rb') as f:
+    with open(save_path, "rb") as f:
         classifier = pickle.load(f)
     if device is not None:
         classifier = classifier.to(device)
@@ -47,7 +48,7 @@ def torch_load_old(save_path, device=None):
 
 
 def torch_save(model, save_path):
-    if os.path.dirname(save_path) != '':
+    if os.path.dirname(save_path) != "":
         os.makedirs(os.path.dirname(save_path), exist_ok=True)
     torch.save(model.cpu(), save_path)
 
@@ -59,16 +60,15 @@ def torch_load(save_path, device=None):
     return model
 
 
-
 def get_logits(inputs, classifier):
     assert callable(classifier)
-    if hasattr(classifier, 'to'):
+    if hasattr(classifier, "to"):
         classifier = classifier.to(inputs.device)
     return classifier(inputs)
 
 
 def get_probs(inputs, classifier):
-    if hasattr(classifier, 'predict_proba'):
+    if hasattr(classifier, "predict_proba"):
         probs = classifier.predict_proba(inputs.detach().cpu().numpy())
         return torch.from_numpy(probs)
     logits = get_logits(inputs, classifier)
