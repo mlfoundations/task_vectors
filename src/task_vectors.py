@@ -1,10 +1,12 @@
 import torch
+from torch import Tensor
+from abc import ABC, abstractmethod
 
 
-class TaskVector():
+class TaskVectorABC(ABC):
     def __init__(self, pretrained_checkpoint=None, finetuned_checkpoint=None, vector=None):
         """Initializes the task vector from a pretrained and a finetuned checkpoints.
-        
+
         This can either be done by passing two state dicts (one corresponding to the
         pretrained model, and another to the finetuned model), or by directly passying in
         the task vector state dict.
@@ -21,17 +23,10 @@ class TaskVector():
                     if pretrained_state_dict[key].dtype in [torch.int64, torch.uint8]:
                         continue
                     self.vector[key] = finetuned_state_dict[key] - pretrained_state_dict[key]
-    
+
+    @abstractmethod
     def __add__(self, other):
-        """Add two task vectors together."""
-        with torch.no_grad():
-            new_vector = {}
-            for key in self.vector:
-                if key not in other.vector:
-                    print(f'Warning, key {key} is not present in both task vectors.')
-                    continue
-                new_vector[key] = self.vector[key] + other.vector[key]
-        return TaskVector(vector=new_vector)
+        pass
 
     def __radd__(self, other):
         if other is None or isinstance(other, int):
@@ -43,7 +38,7 @@ class TaskVector():
         with torch.no_grad():
             new_vector = {}
             for key in self.vector:
-                new_vector[key] = - self.vector[key]
+                new_vector[key] = -self.vector[key]
         return TaskVector(vector=new_vector)
 
     def apply_to(self, pretrained_checkpoint, scaling_coef=1.0):
@@ -54,9 +49,52 @@ class TaskVector():
             pretrained_state_dict = pretrained_model.state_dict()
             for key in pretrained_state_dict:
                 if key not in self.vector:
-                    print(f'Warning: key {key} is present in the pretrained state dict but not in the task vector')
+                    print(f"Warning: key {key} is present in the pretrained state dict but not in the task vector")
                     continue
                 new_state_dict[key] = pretrained_state_dict[key] + scaling_coef * self.vector[key]
         pretrained_model.load_state_dict(new_state_dict, strict=False)
         return pretrained_model
 
+
+class TaskVector(TaskVectorABC):
+    def __init__(self, pretrained_checkpoint=None, finetuned_checkpoint=None, vector=None):
+        super().__init__(pretrained_checkpoint, finetuned_checkpoint, vector)
+
+    def __add__(self, other):
+        """Add two task vectors together."""
+        with torch.no_grad():
+            new_vector = {}
+            for key in self.vector:
+                if key not in other.vector:
+                    print(f"Warning, key {key} is not present in both task vectors.")
+                    continue
+                new_vector[key] = self.vector[key] + other.vector[key]
+        return TaskVector(vector=new_vector)
+
+
+class TaskVectorTopKZero(TaskVectorABC):
+    def __init__(self, pretrained_checkpoint=None, finetuned_checkpoint=None, vector=None, top_k: float = 0):
+        super().__init__(pretrained_checkpoint, finetuned_checkpoint, vector)
+        self.top_k = top_k
+
+    def __add__(self, other):
+        """Add two task vectors together."""
+        with torch.no_grad():
+            new_vector = {}
+            for key in self.vector:
+                if key not in other.vector:
+                    print(f"Warning, key {key} is not present in both task vectors.")
+                    continue
+                new_vector[key] = self.mask(self.vector[key]) + self.mask(other.vector[key])
+        return TaskVector(vector=new_vector)
+
+    def mask(self, tensor: Tensor) -> Tensor:
+        if len(tensor.shape) == 0:
+            return tensor
+        else:
+            top_k_int = int(tensor.shape[-1] * self.top_k)
+            _, masked_indices = torch.topk(torch.abs(tensor), top_k_int)
+            mask = torch.ones(tensor.shape)
+            mask.scatter_(tensor.shape[-1], masked_indices, 0.0)
+
+            return mask * tensor
