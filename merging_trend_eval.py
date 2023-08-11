@@ -2,7 +2,7 @@ import wandb
 import argparse
 from tqdm.auto import tqdm
 from itertools import combinations
-from src.task_vectors import TaskVector
+from src.task_vectors import TaskVector, TaskVectorTopKZero
 from src.eval import eval_single_dataset
 import torch
 
@@ -17,7 +17,7 @@ def main(args: argparse.Namespace):
         # We pass a run name (otherwise it’ll be randomly assigned, like sunshine-lollypop-10)
         name=f"{args.run_name}_{args.alpha}",
         # Track hyperparameters and run metadata
-        config={"model": "ViT-B-32", "alpha": args.alpha},
+        config={"model": "ViT-B-32", "alpha": args.alpha, "method": args.run_name, "beta": args.beta},
     )
     for nb_datasets in tqdm(range(args.evaluation_depth + 1)):
         global_average_acc = 0.0
@@ -31,10 +31,24 @@ def main(args: argparse.Namespace):
             if len(data_subsets) == 0:
                 data_subsets = args.data_sets
                 alpha = 0
-            task_vectors = [
-                TaskVector(args.pretrained_checkpoint, f"{args.checkpoint_path}/{args.model}/{dataset}/finetuned.pt")
-                for dataset in data_subsets
-            ]
+            if args.run_name == "paper_implementation":
+                task_vectors = [
+                    TaskVector(
+                        args.pretrained_checkpoint, f"{args.checkpoint_path}/{args.model}/{dataset}/finetuned.pt"
+                    )
+                    for dataset in data_subsets
+                ]
+            elif args.run_name == "topk_zero":
+                task_vectors = [
+                    TaskVectorTopKZero(
+                        pretrained_checkpoint=args.pretrained_checkpoint,
+                        finetuned_checkpoint=f"{args.checkpoint_path}/{args.model}/{dataset}/finetuned.pt",
+                        top_k=args.beta,
+                    )
+                    for dataset in data_subsets
+                ]
+            else:
+                raise ValueError("Unsupported method of task vectors.")
             task_vector_sum = sum(task_vectors)
             image_encoder = task_vector_sum.apply_to(args.pretrained_checkpoint, scaling_coef=alpha)
             for dataset in data_subsets:
@@ -80,6 +94,7 @@ if __name__ == "__main__":
         help="Optional name for the run.",
         type=str,
         default="paper_implementation",
+        choices=["paper_implementation", "topk_zero"],
     )
     parser.add_argument(
         "--checkpoint_path",
@@ -120,6 +135,13 @@ if __name__ == "__main__":
         "--batch-size",
         type=int,
         default=128,
+    )
+
+    parser.add_argument(
+        "--beta",
+        help="The removal value.",
+        default=0.0,
+        type=float,
     )
 
     args = parser.parse_args()
