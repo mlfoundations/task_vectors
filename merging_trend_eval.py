@@ -15,7 +15,7 @@ def main(args: argparse.Namespace):
         # Set the project where this run will be logged
         project="task-vector-addition",
         # We pass a run name (otherwise it’ll be randomly assigned, like sunshine-lollypop-10)
-        name=f"{args.run_name}_{args.alpha}",
+        name=f"{args.run_name}_alpha_{args.alpha}_beta_{args.beta}",
         # Track hyperparameters and run metadata
         config={"model": "ViT-B-32", "alpha": args.alpha, "method": args.run_name, "beta": args.beta},
     )
