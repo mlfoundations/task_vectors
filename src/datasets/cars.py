@@ -47,9 +47,7 @@ class PytorchStanfordCars(VisionDataset):
         try:
             import scipy.io as sio
         except ImportError:
-            raise RuntimeError(
-                "Scipy is not found. This dataset needs to have scipy installed: pip install scipy"
-            )
+            raise RuntimeError("Scipy is not found. This dataset needs to have scipy installed: pip install scipy")
 
         super().__init__(root, transform=transform, target_transform=target_transform)
 
@@ -61,33 +59,24 @@ class PytorchStanfordCars(VisionDataset):
             self._annotations_mat_path = devkit / "cars_train_annos.mat"
             self._images_base_path = self._base_folder / "cars_train"
         else:
-            self._annotations_mat_path = (
-                self._base_folder / "cars_test_annos_withlabels.mat"
-            )
+            self._annotations_mat_path = self._base_folder / "cars_test_annos_withlabels.mat"
             self._images_base_path = self._base_folder / "cars_test"
 
         if download:
             self.download()
 
         if not self._check_exists():
-            raise RuntimeError(
-                "Dataset not found. You can use download=True to download it"
-            )
+            raise RuntimeError("Dataset not found. You can use download=True to download it")
 
         self._samples = [
             (
                 str(self._images_base_path / annotation["fname"]),
-                annotation["class"]
-                - 1,  # Original target mapping  starts from 1, hence -1
+                annotation["class"] - 1,  # Original target mapping  starts from 1, hence -1
             )
-            for annotation in sio.loadmat(self._annotations_mat_path, squeeze_me=True)[
-                "annotations"
-            ]
+            for annotation in sio.loadmat(self._annotations_mat_path, squeeze_me=True)["annotations"]
         ]
 
-        self.classes = sio.loadmat(str(devkit / "cars_meta.mat"), squeeze_me=True)[
-            "class_names"
-        ].tolist()
+        self.classes = sio.loadmat(str(devkit / "cars_meta.mat"), squeeze_me=True)["class_names"].tolist()
         self.class_to_idx = {cls: i for i, cls in enumerate(self.classes)}
 
     def __len__(self) -> int:
@@ -146,16 +135,37 @@ class Cars:
         batch_size=32,
         num_workers=16,
     ):
+        """
+        Note: as of this moment the access to the data link is not available.
+        In order to get the code running you need:
+        (1) The original Kaggle dataset:
+        https://www.kaggle.com/datasets/jessicali9530/stanford-cars-dataset?datasetId=30084&sortBy=dateCreated&select=cars_test
+        (2) The devkit: car_devkit.tgz
+        https://github.com/pytorch/vision/files/11644847/car_devkit.tgz
+        (3) The cars_test_annos_withlabels.mat file:
+        https://www.kaggle.com/code/subhangaupadhaya/pytorch-stanfordcars-classification/input?select=cars_test_annos_withlabels+%281%29.mat
+
+        With the following directory structure:
+        └── stanford_cars
+            └── cars_test_annos_withlabels.mat
+            └── cars_train
+                └── *.jpg
+            └── cars_test
+                └── .*jpg
+            └── devkit
+                ├── cars_meta.mat
+                ├── cars_test_annos.mat
+                ├── cars_train_annos.mat
+                ├── eval_train.m
+                ├── README.txt
+                └── train_perfect_preds.txt
+        """
         # Data loading code
         try:
-            self.train_dataset = PytorchStanfordCars(
-                location, "train", preprocess, download=True
-            )
+            self.train_dataset = PytorchStanfordCars(location, "train", preprocess, download=True)
         except HTTPError as err:
             if err.code == 404:
-                data_path = os.path.join(
-                    location, "stanford_cars_folder_based", "train"
-                )
+                data_path = os.path.join(location, "stanford_cars_folder_based", "train")
                 self.train_dataset = ImageFolder(data_path, transform=preprocess)
             else:
                 raise
@@ -166,9 +176,7 @@ class Cars:
             num_workers=num_workers,
         )
         try:
-            self.test_dataset = PytorchStanfordCars(
-                location, "test", preprocess, download=True
-            )
+            self.test_dataset = PytorchStanfordCars(location, "test", preprocess, download=True)
         except HTTPError as err:
             if err.code == 404:
                 data_path = os.path.join(location, "stanford_cars_folder_based", "test")
@@ -179,6 +187,4 @@ class Cars:
             self.test_dataset, batch_size=batch_size, num_workers=num_workers
         )
         idx_to_class = dict((v, k) for k, v in self.train_dataset.class_to_idx.items())
-        self.classnames = [
-            idx_to_class[i].replace("_", " ") for i in range(len(idx_to_class))
-        ]
+        self.classnames = [idx_to_class[i].replace("_", " ") for i in range(len(idx_to_class))]
