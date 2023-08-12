@@ -95,6 +95,6 @@ class TaskVectorTopKZero(TaskVectorABC):
             top_k_int = int(tensor.shape[-1] * self.top_k)
             _, masked_indices = torch.topk(torch.abs(tensor), top_k_int)
             mask = torch.ones(tensor.shape)
-            mask.scatter_(tensor.shape[-1], masked_indices, 0.0)
+            mask.scatter_(len(tensor.shape) - 1, masked_indices, 0.0)
 
             return mask * tensor
