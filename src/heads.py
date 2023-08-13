@@ -1,6 +1,6 @@
 import os
 import torch
-from tqdm import tqdm
+from tqdm.auto import tqdm
 
 import open_clip
 

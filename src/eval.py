@@ -1,16 +1,14 @@
-import os
 import json
-import tqdm
+import os
 
 import torch
-import numpy as np
+from tqdm.auto import tqdm
 
 from src import utils
 from src.datasets.common import get_dataloader, maybe_dictionarize
+from src.datasets.registry import get_dataset
 from src.heads import get_classification_head
 from src.modeling import ImageClassifier
-
-from src.datasets.registry import get_dataset
 
 
 def eval_single_dataset(image_encoder, dataset_name, args):
@@ -41,7 +39,7 @@ def eval_single_dataset(image_encoder, dataset_name, args):
         top1 = correct / n
 
     metrics = {"top1": top1}
-    print(f"Done evaluating on {dataset_name}. Accuracy: {100*top1:.2f}%")
+    print(f"Done evaluating on {dataset_name}. Accuracy: {100 * top1:.2f}%")
 
     return metrics
 
