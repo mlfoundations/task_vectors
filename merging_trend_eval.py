@@ -6,8 +6,26 @@ from src.task_vectors import TaskVector, TaskVectorTopKZero
 from src.eval import eval_single_dataset
 import torch
 
-zeroshot_acc = {"MNIST": 48.25, "RESISC45": 60.22, "DTD": 44.41, "GTSRB": 32.56, "SVHN": 31.61}
-finetuned_acc = {"MNIST": 99.69, "RESISC45": 96.11, "DTD": 79.41, "GTSRB": 98.73, "SVHN": 97.46}
+zeroshot_acc = {
+    "MNIST": 48.25,
+    "RESISC45": 60.22,
+    "DTD": 44.41,
+    "GTSRB": 32.56,
+    "SVHN": 31.61,
+    "SUN397": 62.92,
+    "EuroSAT": 45.15,
+    "Cars": 59.64,
+}
+finetuned_acc = {
+    "MNIST": 99.69,
+    "RESISC45": 96.11,
+    "DTD": 79.41,
+    "GTSRB": 98.73,
+    "SVHN": 97.46,
+    "SUN397": 74.98,
+    "EuroSAT": 99.70,
+    "Cars": 77.66,
+}
 
 
 def main(args: argparse.Namespace):
