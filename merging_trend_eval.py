@@ -112,7 +112,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--data_sets",
         help="The name of the datasets used for evaluation",
-        choices=["MNIST", "Cars", "RESISC45", "DTD", "GTSRB", "SVHN", "EuroSAT"],
+        choices=["MNIST", "Cars", "RESISC45", "DTD", "GTSRB", "SVHN", "EuroSAT", "SUN397"],
         default="MNIST",
         nargs="*",
         type=str,
