@@ -37,6 +37,27 @@ def main(args: argparse.Namespace):
         # Track hyperparameters and run metadata
         config={"model": "ViT-B-32", "alpha": args.alpha, "method": args.run_name, "beta": args.beta},
     )
+    # build and load all the needed task vectors at once
+    if args.run_name == "paper_implementation":
+        task_vectors_dict = {
+            dataset: TaskVector(
+                args.pretrained_checkpoint, f"{args.checkpoint_path}/{args.model}/{dataset}/finetuned.pt"
+            )
+            for dataset in args.data_sets
+        }
+
+    elif args.run_name == "topk_zero":
+        task_vectors_dict = {
+            dataset: TaskVectorTopKZero(
+                pretrained_checkpoint=args.pretrained_checkpoint,
+                finetuned_checkpoint=f"{args.checkpoint_path}/{args.model}/{dataset}/finetuned.pt",
+                top_k=args.beta,
+            )
+            for dataset in args.data_sets
+        }
+    else:
+        raise ValueError("Unsupported method of task vectors.")
+
     for nb_datasets in tqdm(range(args.evaluation_depth + 1)):
         global_average_acc = 0.0
         global_average_normalized_acc = 0.0
@@ -49,24 +70,7 @@ def main(args: argparse.Namespace):
             if len(data_subsets) == 0:
                 data_subsets = args.data_sets
                 alpha = 0
-            if args.run_name == "paper_implementation":
-                task_vectors = [
-                    TaskVector(
-                        args.pretrained_checkpoint, f"{args.checkpoint_path}/{args.model}/{dataset}/finetuned.pt"
-                    )
-                    for dataset in data_subsets
-                ]
-            elif args.run_name == "topk_zero":
-                task_vectors = [
-                    TaskVectorTopKZero(
-                        pretrained_checkpoint=args.pretrained_checkpoint,
-                        finetuned_checkpoint=f"{args.checkpoint_path}/{args.model}/{dataset}/finetuned.pt",
-                        top_k=args.beta,
-                    )
-                    for dataset in data_subsets
-                ]
-            else:
-                raise ValueError("Unsupported method of task vectors.")
+            task_vectors = [task_vectors_dict[dataset] for dataset in data_subsets]
             task_vector_sum = sum(task_vectors)
             image_encoder = task_vector_sum.apply_to(args.pretrained_checkpoint, scaling_coef=alpha)
             for dataset in data_subsets:
@@ -152,7 +156,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--batch-size",
         type=int,
-        default=128,
+        default=1024,
     )
 
     parser.add_argument(
