@@ -76,6 +76,8 @@ class TaskVectorTopKZero(TaskVectorABC):
     def __init__(self, pretrained_checkpoint=None, finetuned_checkpoint=None, vector=None, top_k: float = 0):
         super().__init__(pretrained_checkpoint, finetuned_checkpoint, vector)
         self.top_k = top_k
+        for key, value in self.vector.items():
+            self.vector[key] = self.mask(value)
 
     def __add__(self, other):
         """Add two task vectors together."""
@@ -85,7 +87,7 @@ class TaskVectorTopKZero(TaskVectorABC):
                 if key not in other.vector:
                     print(f"Warning, key {key} is not present in both task vectors.")
                     continue
-                new_vector[key] = self.mask(self.vector[key]) + self.mask(other.vector[key])
+                new_vector[key] = self.vector[key] + other.vector[key]
         return TaskVector(vector=new_vector)
 
     def mask(self, tensor: Tensor) -> Tensor:
