@@ -46,7 +46,7 @@ class TaskVectorABC(ABC):
             new_vector = {}
             for key in self.vector:
                 new_vector[key] = -self.vector[key]
-        return TaskVector(vector=new_vector)
+        return TaskVectorABC(vector=new_vector)
 
     def apply_to(self, pretrained_checkpoint, scaling_coef=1.0):
         """Apply a task vector to a pretrained model."""
@@ -72,8 +72,9 @@ class TaskVectorTopKZero(TaskVectorABC):
     def __init__(self, pretrained_checkpoint=None, finetuned_checkpoint=None, vector=None, top_k: float = 0):
         super().__init__(pretrained_checkpoint, finetuned_checkpoint, vector)
         self.top_k = top_k
-        for key, value in self.vector.items():
-            self.vector[key] = self.mask(value)
+        with torch.no_grad():
+            for key, value in self.vector.items():
+                self.vector[key] = self.mask(value)
 
     def mask(self, tensor: Tensor) -> Tensor:
         if len(tensor.shape) == 0:
@@ -85,3 +86,24 @@ class TaskVectorTopKZero(TaskVectorABC):
             mask.scatter_(len(tensor.shape) - 1, masked_indices, 0.0)
 
             return mask * tensor
+
+
+class TaskVectorTopKInit(TaskVectorABC):
+    def __init__(self, pretrained_checkpoint=None, finetuned_checkpoint=None, vector=None, top_k: float = 0):
+        super().__init__(pretrained_checkpoint, finetuned_checkpoint, vector)
+        self.top_k = top_k
+        pretrained_state_dict = torch.load(pretrained_checkpoint).state_dict()
+        with torch.no_grad():
+            for key, value in self.vector.items():
+                self.vector[key] = self.mask_and_init(value, pretrained_state_dict[key])
+
+    def mask_and_init(self, tensor_a: Tensor, tensor_b: Tensor) -> Tensor:
+        if len(tensor_a.shape) == 0:
+            return tensor_a
+        else:
+            top_k_int = int(tensor_a.shape[-1] * self.top_k)
+            _, masked_indices = torch.topk(torch.abs(tensor_a), top_k_int)
+            mask = torch.ones(tensor_a.shape)
+            mask.scatter_(len(tensor_a.shape) - 1, masked_indices, 0.0)
+
+            return mask * tensor_a + (~mask.bool()).int() * tensor_b
