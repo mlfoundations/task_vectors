@@ -24,9 +24,16 @@ class TaskVectorABC(ABC):
                         continue
                     self.vector[key] = finetuned_state_dict[key] - pretrained_state_dict[key]
 
-    @abstractmethod
     def __add__(self, other):
-        pass
+        """Add two task vectors together."""
+        with torch.no_grad():
+            new_vector = {}
+            for key in self.vector:
+                if key not in other.vector:
+                    print(f"Warning, key {key} is not present in both task vectors.")
+                    continue
+                new_vector[key] = self.vector[key] + other.vector[key]
+        return TaskVector(vector=new_vector)
 
     def __radd__(self, other):
         if other is None or isinstance(other, int):
@@ -60,17 +67,6 @@ class TaskVector(TaskVectorABC):
     def __init__(self, pretrained_checkpoint=None, finetuned_checkpoint=None, vector=None):
         super().__init__(pretrained_checkpoint, finetuned_checkpoint, vector)
 
-    def __add__(self, other):
-        """Add two task vectors together."""
-        with torch.no_grad():
-            new_vector = {}
-            for key in self.vector:
-                if key not in other.vector:
-                    print(f"Warning, key {key} is not present in both task vectors.")
-                    continue
-                new_vector[key] = self.vector[key] + other.vector[key]
-        return TaskVector(vector=new_vector)
-
 
 class TaskVectorTopKZero(TaskVectorABC):
     def __init__(self, pretrained_checkpoint=None, finetuned_checkpoint=None, vector=None, top_k: float = 0):
@@ -78,17 +74,6 @@ class TaskVectorTopKZero(TaskVectorABC):
         self.top_k = top_k
         for key, value in self.vector.items():
             self.vector[key] = self.mask(value)
-
-    def __add__(self, other):
-        """Add two task vectors together."""
-        with torch.no_grad():
-            new_vector = {}
-            for key in self.vector:
-                if key not in other.vector:
-                    print(f"Warning, key {key} is not present in both task vectors.")
-                    continue
-                new_vector[key] = self.vector[key] + other.vector[key]
-        return TaskVector(vector=new_vector)
 
     def mask(self, tensor: Tensor) -> Tensor:
         if len(tensor.shape) == 0:
