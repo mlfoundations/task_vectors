@@ -21,7 +21,7 @@ def eval_single_dataset(image_encoder, dataset_name, args):
     dataloader = get_dataloader(dataset, is_train=False, args=args, image_encoder=None)
     device = args.device
 
-    with torch.inference_mode():
+    with torch.no_grad():
         top1, correct, n = 0.0, 0.0, 0.0
         for i, data in enumerate(tqdm(dataloader)):
             data = maybe_dictionarize(data)
