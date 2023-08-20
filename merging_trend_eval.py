@@ -191,7 +191,6 @@ if __name__ == "__main__":
         "--single_level_eval",
         help="Indicates whether we want to evaluate on a single level basis or up to a level.",
         default=False,
-        type=bool,
         action="store_true",
     )
 
