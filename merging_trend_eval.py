@@ -6,7 +6,7 @@ import wandb
 from tqdm.auto import tqdm
 
 from src.eval import eval_single_dataset
-from src.task_vectors import TaskVector, TaskVectorTopKZero, TaskVectorTopKInit
+from src.task_vectors import TaskVector, TaskVectorTopKZero, TaskVectorTopKInit, TaskVectorTopKKeep
 
 zeroshot_acc = {
     "MNIST": 48.25,
@@ -60,6 +60,15 @@ def main(args: argparse.Namespace):
     elif args.run_name == "topk_init":
         task_vectors_dict = {
             dataset: TaskVectorTopKInit(
+                pretrained_checkpoint=args.pretrained_checkpoint,
+                finetuned_checkpoint=f"{args.checkpoint_path}/{args.model}/{dataset}/finetuned.pt",
+                top_k=args.beta,
+            )
+            for dataset in args.data_sets
+        }
+    elif args.run_name == "topk_keep":
+        task_vectors_dict = {
+            dataset: TaskVectorTopKKeep(
                 pretrained_checkpoint=args.pretrained_checkpoint,
                 finetuned_checkpoint=f"{args.checkpoint_path}/{args.model}/{dataset}/finetuned.pt",
                 top_k=args.beta,
@@ -127,7 +136,7 @@ if __name__ == "__main__":
         help="Optional name for the run.",
         type=str,
         default="paper_implementation",
-        choices=["paper_implementation", "topk_zero", "topk_init"],
+        choices=["paper_implementation", "topk_zero", "topk_init", "topk_keep"],
     )
     parser.add_argument(
         "--checkpoint_path",

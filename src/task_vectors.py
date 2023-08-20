@@ -107,3 +107,23 @@ class TaskVectorTopKInit(TaskVectorABC):
             mask.scatter_(len(tensor_a.shape) - 1, masked_indices, 0.0)
 
             return mask * tensor_a + (~mask.bool()).int() * tensor_b
+
+
+class TaskVectorTopKKeep(TaskVectorABC):
+    def __init__(self, pretrained_checkpoint=None, finetuned_checkpoint=None, vector=None, top_k: float = 0):
+        super().__init__(pretrained_checkpoint, finetuned_checkpoint, vector)
+        self.top_k = top_k
+        with torch.no_grad():
+            for key, value in self.vector.items():
+                self.vector[key] = self.mask(value)
+
+    def mask(self, tensor: Tensor) -> Tensor:
+        if len(tensor.shape) == 0:
+            return tensor
+        else:
+            top_k_int = int(tensor.shape[-1] * self.top_k)
+            _, masked_indices = torch.topk(torch.abs(tensor), top_k_int)
+            mask = torch.zeros(tensor.shape)
+            mask.scatter_(len(tensor.shape) - 1, masked_indices, 1)
+
+            return mask * tensor
