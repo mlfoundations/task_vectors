@@ -78,7 +78,8 @@ def main(args: argparse.Namespace):
     else:
         raise ValueError("Unsupported method of task vectors.")
 
-    for nb_datasets in tqdm(range(args.evaluation_depth + 1)):
+    base_depth = args.evaluation_depth if args.single_level_eval else 0
+    for nb_datasets in tqdm(range(base_depth, args.evaluation_depth + 1)):
         global_average_acc = 0.0
         global_average_normalized_acc = 0.0
         nb_subset = 0
@@ -184,6 +185,14 @@ if __name__ == "__main__":
         help="The removal value.",
         default=0.0,
         type=float,
+    )
+
+    parser.add_argument(
+        "--single_level_eval",
+        help="Indicates whether we want to evaluate on a single level basis or up to a level.",
+        default=False,
+        type=bool,
+        action="store_true",
     )
 
     args = parser.parse_args()
