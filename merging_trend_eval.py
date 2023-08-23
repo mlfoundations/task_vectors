@@ -94,7 +94,7 @@ def main(args: argparse.Namespace):
             task_vectors = [task_vectors_dict[dataset] for dataset in data_subsets]
             task_vector_sum = sum(task_vectors)
             image_encoder = task_vector_sum.apply_to(args.pretrained_checkpoint, scaling_coef=alpha)
-            wandb.watch(image_encoder, log="parameters")
+
             for dataset in data_subsets:
                 results = eval_single_dataset(image_encoder, dataset, args)["top1"] * 100.0
                 normalized_acc = (results / finetuned_acc[dataset]) * 100.0
