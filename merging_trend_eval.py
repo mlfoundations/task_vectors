@@ -100,7 +100,7 @@ def main(args: argparse.Namespace):
                 normalized_acc = (results / finetuned_acc[dataset]) * 100.0
                 wandb.log(
                     {
-                        "current_task": average_acc,
+                        "current_task": dataset,
                         "individual_normalized_acc": normalized_acc,
                         "nb_task_vectors": nb_datasets,
                         "tasks": " ".join([str(t) for t in data_subsets]),
