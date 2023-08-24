@@ -89,3 +89,13 @@ class LabelSmoothing(torch.nn.Module):
         smooth_loss = -logprobs.mean(dim=-1)
         loss = self.confidence * nll_loss + self.smoothing * smooth_loss
         return loss.mean()
+
+
+def safe_load_state_dict(weights_path: str):
+    try:
+        state_dict = torch.load(weights_path).state_dict()
+    except:
+        with open(weights_path, "rb") as f:
+            obj = f.read()
+        state_dict = {key: torch.from_numpy(arr) for key, arr in pickle.loads(obj, encoding="latin1").items()}
+    return state_dict

@@ -2,6 +2,8 @@ import torch
 from torch import Tensor
 from abc import ABC, abstractmethod
 
+from utils import safe_load_state_dict
+
 
 class TaskVectorABC(ABC):
     def __init__(self, pretrained_checkpoint=None, finetuned_checkpoint=None, vector=None):
@@ -16,8 +18,8 @@ class TaskVectorABC(ABC):
         else:
             assert pretrained_checkpoint is not None and finetuned_checkpoint is not None
             with torch.no_grad():
-                pretrained_state_dict = torch.load(pretrained_checkpoint).state_dict()
-                finetuned_state_dict = torch.load(finetuned_checkpoint).state_dict()
+                pretrained_state_dict = safe_load_state_dict(pretrained_checkpoint)
+                finetuned_state_dict = safe_load_state_dict(finetuned_checkpoint)
                 self.vector = {}
                 for key in pretrained_state_dict:
                     if pretrained_state_dict[key].dtype in [torch.int64, torch.uint8]:
