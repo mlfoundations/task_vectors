@@ -97,5 +97,5 @@ def safe_load_state_dict(weights_path: str):
     except:
         with open(weights_path, "rb") as f:
             obj = f.read()
-        state_dict = {key: torch.from_numpy(arr) for key, arr in pickle.loads(obj, encoding="latin1").items()}
+        state_dict = obj.state_dict()
     return state_dict
