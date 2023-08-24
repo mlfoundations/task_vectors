@@ -1,8 +1,8 @@
 import torch
 from torch import Tensor
-from abc import ABC, abstractmethod
+from abc import ABC
 
-from utils import safe_load_state_dict
+from src.utils import safe_load_state_dict
 
 
 class TaskVectorABC(ABC):
