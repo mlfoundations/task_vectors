@@ -158,7 +158,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--model",
         help="The type of model.",
-        choices=["ViT-B-32", "ViT-B-16", "ViT-L-16"],
+        choices=["ViT-B-32", "ViT-B-16", "ViT-L-14"],
         default="ViT-B-32",
         type=str,
     )
