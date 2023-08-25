@@ -9,24 +9,48 @@ from src.eval import eval_single_dataset
 from src.task_vectors import TaskVector, TaskVectorTopKZero, TaskVectorTopKInit, TaskVectorTopKKeep
 
 zeroshot_acc = {
-    "MNIST": 48.25,
-    "RESISC45": 60.22,
-    "DTD": 44.41,
-    "GTSRB": 32.56,
-    "SVHN": 31.61,
-    "SUN397": 62.92,
-    "EuroSAT": 45.15,
-    "Cars": 59.64,
+    "ViT-B-32": {
+        "MNIST": 48.25,
+        "RESISC45": 60.22,
+        "DTD": 44.41,
+        "GTSRB": 32.56,
+        "SVHN": 31.61,
+        "SUN397": 62.92,
+        "EuroSAT": 45.15,
+        "Cars": 59.64,
+    },
+    "ViT-B-16": {
+        "MNIST": 51.80,
+        "RESISC45": 66.35,
+        "DTD": 44.68,
+        "GTSRB": 43.34,
+        "SVHN": 51.98,
+        "SUN397": 65.22,
+        "EuroSAT": 54.52,
+        "Cars": 64.71,
+    },
 }
 finetuned_acc = {
-    "MNIST": 99.69,
-    "RESISC45": 96.11,
-    "DTD": 79.41,
-    "GTSRB": 98.73,
-    "SVHN": 97.46,
-    "SUN397": 74.98,
-    "EuroSAT": 99.70,
-    "Cars": 77.66,
+    "ViT-B-32": {
+        "MNIST": 99.69,
+        "RESISC45": 96.11,
+        "DTD": 79.41,
+        "GTSRB": 98.73,
+        "SVHN": 97.46,
+        "SUN397": 74.98,
+        "EuroSAT": 99.70,
+        "Cars": 77.66,
+    },
+    "ViT-B-16": {
+        "MNIST": 99.76,
+        "RESISC45": 96.89,
+        "DTD": 82.07,
+        "GTSRB": 99.17,
+        "SVHN": 97.86,
+        "SUN397": 78.20,
+        "EuroSAT": 99.70,
+        "Cars": 86.79,
+    },
 }
 
 
@@ -91,16 +115,22 @@ def main(args: argparse.Namespace):
             if len(data_subsets) == 0:
                 data_subsets = args.data_sets
                 alpha = 0
-            task_vectors = [task_vectors_dict[dataset] for dataset in data_subsets]
-            task_vector_sum = sum(task_vectors)
-            image_encoder = task_vector_sum.apply_to(args.pretrained_checkpoint, scaling_coef=alpha)
+
+            if len(data_subsets) > 0:
+                task_vectors = [task_vectors_dict[dataset] for dataset in data_subsets]
+                task_vector_sum = sum(task_vectors)
+                image_encoder = task_vector_sum.apply_to(args.pretrained_checkpoint, scaling_coef=alpha)
 
             for dataset in data_subsets:
-                results = eval_single_dataset(image_encoder, dataset, args)["top1"] * 100.0
-                normalized_acc = (results / finetuned_acc[dataset]) * 100.0
+                if len(data_subsets) > 0:
+                    results = eval_single_dataset(image_encoder, dataset, args)["top1"] * 100.0
+                else:
+                    results = zeroshot_acc[args.model][dataset]
+                normalized_acc = (results / finetuned_acc[args.model][dataset]) * 100.0
                 wandb.log(
                     {
                         "current_task": dataset,
+                        "individual_acc": results,
                         "individual_normalized_acc": normalized_acc,
                         "nb_task_vectors": nb_datasets,
                         "tasks": " ".join([str(t) for t in data_subsets]),
