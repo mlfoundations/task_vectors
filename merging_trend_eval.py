@@ -68,7 +68,7 @@ finetuned_acc = {
         "GTSRB": 99.24,
         "SVHN": 98.11,
         "SUN397": 81.96,
-        "EuroSAT": 9.85,
+        "EuroSAT": 99.85,
         "Cars": 92.39,
     },
 }
