@@ -29,6 +29,16 @@ zeroshot_acc = {
         "EuroSAT": 54.52,
         "Cars": 64.71,
     },
+    "ViT-L-14": {
+        "MNIST": 76.36,
+        "RESISC45": 71.33,
+        "DTD": 55.37,
+        "GTSRB": 50.55,
+        "SVHN": 58.45,
+        "SUN397": 67.96,
+        "EuroSAT": 61.63,
+        "Cars": 77.94,
+    },
 }
 finetuned_acc = {
     "ViT-B-32": {
@@ -50,6 +60,16 @@ finetuned_acc = {
         "SUN397": 78.20,
         "EuroSAT": 99.70,
         "Cars": 86.79,
+    },
+    "ViT-L-14": {
+        "MNIST": 99.69,
+        "RESISC45": 97.37,
+        "DTD": 84.15,
+        "GTSRB": 99.24,
+        "SVHN": 98.11,
+        "SUN397": 81.96,
+        "EuroSAT": 9.85,
+        "Cars": 92.39,
     },
 }
 
