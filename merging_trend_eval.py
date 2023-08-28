@@ -126,6 +126,7 @@ def main(args: argparse.Namespace):
     for nb_datasets in tqdm(range(base_depth, args.evaluation_depth + 1)):
         global_average_acc = 0.0
         global_average_normalized_acc = 0.0
+        global_imagenet_acc = 0.0
         nb_subset = 0
         for data_subsets in tqdm(combinations(args.data_sets, nb_datasets)):
             alpha = args.alpha
@@ -136,51 +137,96 @@ def main(args: argparse.Namespace):
                 data_subsets = args.data_sets
                 alpha = 0
 
-            if len(data_subsets) > 0:
-                task_vectors = [task_vectors_dict[dataset] for dataset in data_subsets]
-                task_vector_sum = sum(task_vectors)
-                image_encoder = task_vector_sum.apply_to(args.pretrained_checkpoint, scaling_coef=alpha)
+            task_vectors = [task_vectors_dict[dataset] for dataset in data_subsets]
+            task_vector_sum = sum(task_vectors)
+            image_encoder = task_vector_sum.apply_to(args.pretrained_checkpoint, scaling_coef=alpha)
 
-            for dataset in data_subsets:
-                if len(data_subsets) > 0:
-                    results = eval_single_dataset(image_encoder, dataset, args)["top1"] * 100.0
-                else:
-                    results = zeroshot_acc[args.model][dataset]
-                normalized_acc = (results / finetuned_acc[args.model][dataset]) * 100.0
+            if not args.eval_on_imagenet_only:
+                for dataset in data_subsets:
+                    if len(data_subsets) == 0:
+                        try:
+                            results = zeroshot_acc[args.model][dataset]
+                        except KeyError:
+                            results = eval_single_dataset(image_encoder, dataset, args)["top1"] * 100.0
+                    else:
+                        results = eval_single_dataset(image_encoder, dataset, args)["top1"] * 100.0
+
+                    normalized_acc = (results / finetuned_acc[args.model][dataset]) * 100.0
+                    wandb.log(
+                        {
+                            "current_task": dataset,
+                            "individual_acc": results,
+                            "individual_normalized_acc": normalized_acc,
+                            "nb_task_vectors": nb_datasets,
+                            "tasks": " ".join([str(t) for t in data_subsets]),
+                        }
+                    )
+                    average_normalized_acc += normalized_acc
+                    average_acc += results
+
+                average_acc /= len(data_subsets)
+                average_normalized_acc /= len(data_subsets)
+                global_average_acc += average_acc
+                global_average_normalized_acc += average_normalized_acc
                 wandb.log(
                     {
-                        "current_task": dataset,
-                        "individual_acc": results,
-                        "individual_normalized_acc": normalized_acc,
+                        "average_acc": average_acc,
+                        "average_normalized_acc": average_normalized_acc,
                         "nb_task_vectors": nb_datasets,
                         "tasks": " ".join([str(t) for t in data_subsets]),
                     }
                 )
-                average_normalized_acc += normalized_acc
-                average_acc += results
+                if args.eval_on_imagenet_also:
+                    imagenet_results = eval_single_dataset(image_encoder, "ImageNet", args)["top1"] * 100.0
+                    wandb.log(
+                        {
+                            "imagenet_acc": imagenet_results,
+                            "nb_task_vectors": nb_datasets,
+                            "tasks": " ".join([str(t) for t in data_subsets]),
+                        }
+                    )
+                    global_imagenet_acc += imagenet_results
+            else:
+                # only evaluating on imagenet
+                imagenet_results = eval_single_dataset(image_encoder, "ImageNet", args)["top1"] * 100.0
+                wandb.log(
+                    {
+                        "imagenet_acc": imagenet_results,
+                        "nb_task_vectors": nb_datasets,
+                        "tasks": " ".join([str(t) for t in data_subsets]),
+                    }
+                )
+                global_imagenet_acc += imagenet_results
 
-            average_acc /= len(data_subsets)
-            average_normalized_acc /= len(data_subsets)
-            global_average_acc += average_acc
-            global_average_normalized_acc += average_normalized_acc
+            nb_subset += 1
+
+        if not args.eval_on_imagenet_only:
+            global_average_acc /= nb_subset
+            global_average_normalized_acc /= nb_subset
+
             wandb.log(
                 {
-                    "average_acc": average_acc,
-                    "average_normalized_acc": average_normalized_acc,
+                    "global_average_acc": global_average_acc,
+                    "global_average_normalized_acc": global_average_normalized_acc,
                     "nb_task_vectors": nb_datasets,
-                    "tasks": " ".join([str(t) for t in data_subsets]),
                 }
             )
-            nb_subset += 1
-        global_average_acc /= nb_subset
-        global_average_normalized_acc /= nb_subset
-        wandb.log(
-            {
-                "global_average_acc": global_average_acc,
-                "global_average_normalized_acc": global_average_normalized_acc,
-                "nb_task_vectors": nb_datasets,
-            }
-        )
+            if args.eval_on_imagenet_also:
+                global_imagenet_acc /= nb_subset
+                wandb.log(
+                    {
+                        "global_imagenet_acc": global_imagenet_acc,
+                        "nb_task_vectors": nb_datasets,
+                    }
+                )
+        else:
+            global_imagenet_acc /= nb_subset
+            wandb.log(
+                {
+                    "global_imagenet_acc": global_imagenet_acc,
+                    "nb_task_vectors": nb_datasets,
+                }
+            )
     wandb.finish()
 
 
@@ -250,6 +296,20 @@ if __name__ == "__main__":
     parser.add_argument(
         "--single_level_eval",
         help="Indicates whether we want to evaluate on a single level basis or up to a level.",
+        default=False,
+        action="store_true",
+    )
+
+    parser.add_argument(
+        "--eval_on_imagenet_only",
+        help="Run all evaluations on imagenet data only.",
+        default=False,
+        action="store_true",
+    )
+
+    parser.add_argument(
+        "--eval_on_imagenet_also",
+        help="Run imagenet evaluation in addition to all other evaluations.",
         default=False,
         action="store_true",
     )
