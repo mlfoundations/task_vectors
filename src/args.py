@@ -3,19 +3,20 @@ import argparse
 
 import torch
 
+
 def parse_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--data-location",
         type=str,
-        default=os.path.expanduser('~/data'),
+        default=os.path.expanduser("~/data"),
         help="The root directory for the datasets.",
     )
     parser.add_argument(
         "--eval-datasets",
         default=None,
         type=lambda x: x.split(","),
-        help="Which datasets to use for evaluation. Split by comma, e.g. MNIST,EuroSAT. "
+        help="Which datasets to use for evaluation. Split by comma, e.g. MNIST,EuroSAT. ",
     )
     parser.add_argument(
         "--train-dataset",
@@ -24,10 +25,7 @@ def parse_arguments():
         help="Which dataset(s) to patch on.",
     )
     parser.add_argument(
-        "--exp_name",
-        type=str,
-        default=None,
-        help="Name of the experiment, for organization purposes only."
+        "--exp_name", type=str, default=None, help="Name of the experiment, for organization purposes only."
     )
     parser.add_argument(
         "--results-db",
@@ -46,24 +44,9 @@ def parse_arguments():
         type=int,
         default=128,
     )
-    parser.add_argument(
-        "--lr",
-        type=float,
-        default=0.001,
-        help="Learning rate."
-    )
-    parser.add_argument(
-        "--wd",
-        type=float,
-        default=0.1,
-        help="Weight decay"
-    )
-    parser.add_argument(
-        "--ls",
-        type=float,
-        default=0.0,
-        help="Label smoothing."
-    )
+    parser.add_argument("--lr", type=float, default=0.001, help="Learning rate.")
+    parser.add_argument("--wd", type=float, default=0.1, help="Weight decay")
+    parser.add_argument("--ls", type=float, default=0.0, help="Label smoothing.")
     parser.add_argument(
         "--warmup_length",
         type=int,
@@ -95,12 +78,12 @@ def parse_arguments():
     parser.add_argument(
         "--openclip-cachedir",
         type=str,
-        default='/gscratch/efml/gamaga/.cache/open_clip',
-        help='Directory for caching models from OpenCLIP'
+        default="/gscratch/efml/gamaga/.cache/open_clip",
+        help="Directory for caching models from OpenCLIP",
     )
-    parsed_args = parser.parse_args()
+    parsed_args, _ = parser.parse_known_args()
     parsed_args.device = "cuda" if torch.cuda.is_available() else "cpu"
-    
+
     if parsed_args.load is not None and len(parsed_args.load) == 1:
         parsed_args.load = parsed_args.load[0]
     return parsed_args
