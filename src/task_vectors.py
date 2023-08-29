@@ -129,3 +129,46 @@ class TaskVectorTopKKeep(TaskVectorABC):
             mask.scatter_(len(tensor.shape) - 1, masked_indices, 1)
 
             return mask * tensor
+
+
+class TaskVectorMiddleKeep(TaskVectorABC):
+    def __init__(
+        self,
+        pretrained_checkpoint=None,
+        finetuned_checkpoint=None,
+        vector=None,
+        top_k_keep: float = 0,
+        top_k_remove: float = 0,
+        remove_first: bool = True,
+    ):
+        super().__init__(pretrained_checkpoint, finetuned_checkpoint, vector)
+        self.top_k_keep = top_k_keep
+        self.top_k_remove = top_k_remove
+        with torch.no_grad():
+            for key, value in self.vector.items():
+                if remove_first:
+                    self.vector[key] = self.mask_keep_top(self.mask_remove_top(value))
+                else:
+                    self.vector[key] = self.mask_remove_top(self.mask_keep_top(value))
+
+    def mask_keep_top(self, tensor: Tensor) -> Tensor:
+        if len(tensor.shape) == 0:
+            return tensor
+        else:
+            top_k_int = int(tensor.shape[-1] * self.top_k_keep)
+            _, masked_indices = torch.topk(torch.abs(tensor), top_k_int)
+            mask = torch.zeros(tensor.shape)
+            mask.scatter_(len(tensor.shape) - 1, masked_indices, 1)
+
+            return mask * tensor
+
+    def mask_remove_top(self, tensor: Tensor) -> Tensor:
+        if len(tensor.shape) == 0:
+            return tensor
+        else:
+            top_k_int = int(tensor.shape[-1] * self.top_k_remove)
+            _, masked_indices = torch.topk(torch.abs(tensor), top_k_int)
+            mask = torch.ones(tensor.shape)
+            mask.scatter_(len(tensor.shape) - 1, masked_indices, 0.0)
+
+            return mask * tensor

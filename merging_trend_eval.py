@@ -6,7 +6,13 @@ import wandb
 from tqdm.auto import tqdm
 
 from src.eval import eval_single_dataset
-from src.task_vectors import TaskVector, TaskVectorTopKZero, TaskVectorTopKInit, TaskVectorTopKKeep
+from src.task_vectors import (
+    TaskVector,
+    TaskVectorTopKZero,
+    TaskVectorTopKInit,
+    TaskVectorTopKKeep,
+    TaskVectorMiddleKeep,
+)
 
 zeroshot_acc = {
     "ViT-B-32": {
@@ -116,6 +122,16 @@ def main(args: argparse.Namespace):
                 pretrained_checkpoint=args.pretrained_checkpoint,
                 finetuned_checkpoint=f"{args.checkpoint_path}/{args.model}/{dataset}/finetuned.pt",
                 top_k=args.beta,
+            )
+            for dataset in args.data_sets
+        }
+    elif args.run_name == "middle_keep":
+        task_vectors_dict = {
+            dataset: TaskVectorMiddleKeep(
+                pretrained_checkpoint=args.pretrained_checkpoint,
+                finetuned_checkpoint=f"{args.checkpoint_path}/{args.model}/{dataset}/finetuned.pt",
+                top_k_keep=args.beta,
+                top_k_remove=args.gamma,
             )
             for dataset in args.data_sets
         }
@@ -243,7 +259,7 @@ if __name__ == "__main__":
         help="Optional name for the run.",
         type=str,
         default="paper_implementation",
-        choices=["paper_implementation", "topk_zero", "topk_init", "topk_keep"],
+        choices=["paper_implementation", "topk_zero", "topk_init", "topk_keep", "middle_keep"],
     )
     parser.add_argument(
         "--checkpoint_path",
@@ -289,6 +305,12 @@ if __name__ == "__main__":
     parser.add_argument(
         "--beta",
         help="The removal value.",
+        default=0.0,
+        type=float,
+    )
+    parser.add_argument(
+        "--gamma",
+        help="The removal value needed for the middle keep method.",
         default=0.0,
         type=float,
     )
