@@ -199,7 +199,7 @@ def main(args: argparse.Namespace):
     )
     algo = BayesOptSearch(metric="global_normalized_acc", mode="max", random_search_steps=10)
     tuner = tune.Tuner(
-        tune.with_parameters(evaluate_on_task_subsets, args=args),
+        tune.with_resources(tune.with_parameters(evaluate_on_task_subsets, args=args), {"gpu": 0.5}),
         param_space=space,
         tune_config=tune.TuneConfig(num_samples=num_samples, scheduler=asha_scheduler, search_alg=algo),
         run_config=air.RunConfig(
