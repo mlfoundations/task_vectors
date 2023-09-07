@@ -256,28 +256,9 @@ if __name__ == "__main__":
     )
 
     parser.add_argument(
-        "--alpha",
-        help="The value of alpha indicates the task vector multipliers.",
-        default=0.4,
-        type=float,
-    )
-    parser.add_argument(
         "--batch-size",
         type=int,
         default=1024,
-    )
-
-    parser.add_argument(
-        "--beta",
-        help="The removal value.",
-        default=0.0,
-        type=float,
-    )
-    parser.add_argument(
-        "--gamma",
-        help="The removal value needed for the middle keep method.",
-        default=0.0,
-        type=float,
     )
 
     parser.add_argument(
