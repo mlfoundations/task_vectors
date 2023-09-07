@@ -160,7 +160,7 @@ def main(args: argparse.Namespace):
     if args.method == "paper_implementation":
         space = {"alpha": tune.choice(list(x / 10.0 for x in range(1, 11)))}
         points_to_evaluate = [{"alpha": 0.3}]
-        num_samples = 1
+        num_samples = 10
     elif args.method == "topk_zero":
         space = {
             "alpha": tune.choice(list(x / 10.0 for x in range(1, 11))),
