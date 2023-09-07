@@ -19,7 +19,7 @@ torch = "^2.0.1"
 torchvision = "^0.15.2"
 torchaudio = "^2.0.2"
 ray = {extras = ["tune"], version = "^2.6.3"}
-bayesian-optimization = "^1.4.3"
+optuna = "^3.3.0"
 
 
 [build-system]

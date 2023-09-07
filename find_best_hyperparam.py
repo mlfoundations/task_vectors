@@ -6,7 +6,7 @@ from ray import air, tune
 from ray.air import session
 from ray.air.integrations.wandb import WandbLoggerCallback
 from ray.tune.schedulers import ASHAScheduler
-from ray.tune.search.bayesopt import BayesOptSearch
+from ray.tune.search.optuna import OptunaSearch
 
 from src.eval import eval_single_dataset
 from src.task_vectors import (
@@ -159,24 +159,28 @@ def main(args: argparse.Namespace):
     # build and load all the needed task vectors at once
     if args.method == "paper_implementation":
         space = {"alpha": tune.quniform(0.1, 1, 0.1)}
+        points_to_evaluate = [{"alpha": 0.3}]
         num_samples = 10
     elif args.method == "topk_zero":
         space = {
             "alpha": tune.quniform(0.1, 1, 0.1),
             "beta": tune.quniform(0.05, 0.4, 0.05),
         }
+        points_to_evaluate = [{"alpha": 0.2, "beta": 0.15}]
         num_samples = 40
     elif args.method == "topk_init":
         space = {
             "alpha": tune.quniform(0.1, 1, 0.1),
             "beta": tune.quniform(0.05, 0.4, 0.05),
         }
+        points_to_evaluate = [{"alpha": 0.2, "beta": 0.15}]
         num_samples = 40
     elif args.method == "topk_keep":
         space = {
             "alpha": tune.quniform(0.1, 1, 0.1),
             "beta": tune.quniform(0.05, 0.4, 0.05),
         }
+        points_to_evaluate = [{"alpha": 0.2, "beta": 0.15}]
         num_samples = 40
     elif args.method == "middle_keep":
         space = {
@@ -184,6 +188,7 @@ def main(args: argparse.Namespace):
             "beta": tune.quniform(0.05, 0.4, 0.05),
             "gamma": tune.quniform(0.001, 0.01, 0.001),
         }
+        points_to_evaluate = [{"alpha": 0.2, "beta": 0.15, "gamma": 0.006}]
         num_samples = 100
     else:
         raise ValueError("Unsupported method of task vectors.")
@@ -193,11 +198,11 @@ def main(args: argparse.Namespace):
         metric="global_normalized_acc",
         mode="max",
         max_t=10,
-        grace_period=3,
-        reduction_factor=4,
+        grace_period=1,
+        reduction_factor=2,
         brackets=1,
     )
-    algo = BayesOptSearch(metric="global_normalized_acc", mode="max", random_search_steps=10)
+    algo = OptunaSearch(metric="global_normalized_acc", mode="max", points_to_evaluate=points_to_evaluate)
     tuner = tune.Tuner(
         tune.with_resources(tune.with_parameters(evaluate_on_task_subsets, args=args), {"gpu": 0.5}),
         param_space=space,
