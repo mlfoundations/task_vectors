@@ -93,14 +93,14 @@ def evaluate_all_datasets(args: argparse.Namespace, image_encoder: torch.nn.Modu
 
 
 def evaluate_on_task_subsets(config, args: argparse.Namespace):
-    if args.run_name == "paper_implementation":
+    if args.method == "paper_implementation":
         task_vectors_dict = {
             dataset: TaskVector(
                 args.pretrained_checkpoint, f"{args.checkpoint_path}/{args.model}/{dataset}/finetuned.pt"
             )
             for dataset in args.data_sets
         }
-    elif args.run_name == "topk_zero":
+    elif args.method == "topk_zero":
         task_vectors_dict = {
             dataset: TaskVectorTopKZero(
                 pretrained_checkpoint=args.pretrained_checkpoint,
@@ -109,7 +109,7 @@ def evaluate_on_task_subsets(config, args: argparse.Namespace):
             )
             for dataset in args.data_sets
         }
-    elif args.run_name == "topk_init":
+    elif args.method == "topk_init":
         task_vectors_dict = {
             dataset: TaskVectorTopKInit(
                 pretrained_checkpoint=args.pretrained_checkpoint,
@@ -118,7 +118,7 @@ def evaluate_on_task_subsets(config, args: argparse.Namespace):
             )
             for dataset in args.data_sets
         }
-    elif args.run_name == "topk_keep":
+    elif args.method == "topk_keep":
         task_vectors_dict = {
             dataset: TaskVectorTopKKeep(
                 pretrained_checkpoint=args.pretrained_checkpoint,
@@ -127,7 +127,7 @@ def evaluate_on_task_subsets(config, args: argparse.Namespace):
             )
             for dataset in args.data_sets
         }
-    elif args.run_name == "middle_keep":
+    elif args.method == "middle_keep":
         task_vectors_dict = {
             dataset: TaskVectorMiddleKeep(
                 pretrained_checkpoint=args.pretrained_checkpoint,
@@ -157,28 +157,28 @@ def evaluate_on_task_subsets(config, args: argparse.Namespace):
 
 def main(args: argparse.Namespace):
     # build and load all the needed task vectors at once
-    if args.run_name == "paper_implementation":
+    if args.method == "paper_implementation":
         space = {"alpha": tune.choice(list(x / 10.0 for x in range(1, 11)))}
         num_samples = 10
-    elif args.run_name == "topk_zero":
+    elif args.method == "topk_zero":
         space = {
             "alpha": tune.choice(list(x / 10.0 for x in range(1, 11))),
             "beta": tune.choice([0.01, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4]),
         }
         num_samples = 40
-    elif args.run_name == "topk_init":
+    elif args.method == "topk_init":
         space = {
             "alpha": tune.choice(list(x / 10.0 for x in range(1, 11))),
             "beta": tune.choice([0.01, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4]),
         }
         num_samples = 40
-    elif args.run_name == "topk_keep":
+    elif args.method == "topk_keep":
         space = {
             "alpha": tune.choice(list(x / 10.0 for x in range(1, 11))),
             "beta": tune.choice([0.01, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4]),
         }
         num_samples = 40
-    elif args.run_name == "middle_keep":
+    elif args.method == "middle_keep":
         space = {
             "alpha": tune.choice(list(x / 10.0 for x in range(1, 11))),
             "beta": tune.choice([0.01, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4]),
