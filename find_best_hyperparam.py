@@ -158,31 +158,31 @@ def evaluate_on_task_subsets(config, args: argparse.Namespace):
 def main(args: argparse.Namespace):
     # build and load all the needed task vectors at once
     if args.method == "paper_implementation":
-        space = {"alpha": tune.choice(list(x / 10.0 for x in range(1, 11)))}
+        space = {"alpha": tune.quniform(0.1, 1, 0.1)}
         num_samples = 10
     elif args.method == "topk_zero":
         space = {
-            "alpha": tune.choice(list(x / 10.0 for x in range(1, 11))),
-            "beta": tune.choice([0.01, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4]),
+            "alpha": tune.quniform(0.1, 1, 0.1),
+            "beta": tune.quniform(0.05, 0.4, 0.05),
         }
         num_samples = 40
     elif args.method == "topk_init":
         space = {
-            "alpha": tune.choice(list(x / 10.0 for x in range(1, 11))),
-            "beta": tune.choice([0.01, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4]),
+            "alpha": tune.quniform(0.1, 1, 0.1),
+            "beta": tune.quniform(0.05, 0.4, 0.05),
         }
         num_samples = 40
     elif args.method == "topk_keep":
         space = {
-            "alpha": tune.choice(list(x / 10.0 for x in range(1, 11))),
-            "beta": tune.choice([0.01, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4]),
+            "alpha": tune.quniform(0.1, 1, 0.1),
+            "beta": tune.quniform(0.05, 0.4, 0.05),
         }
         num_samples = 40
     elif args.method == "middle_keep":
         space = {
-            "alpha": tune.choice(list(x / 10.0 for x in range(1, 11))),
-            "beta": tune.choice([0.01, 0.05, 0.1, 0.15, 0.2, 0.25, 0.3, 0.35, 0.4]),
-            "gamma": tune.choice(list(x / 1000.0 for x in range(1, 11))),
+            "alpha": tune.quniform(0.1, 1, 0.1),
+            "beta": tune.quniform(0.05, 0.4, 0.05),
+            "gamma": tune.quniform(0.001, 0.01, 0.001),
         }
         num_samples = 100
     else:
