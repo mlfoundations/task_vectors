@@ -158,33 +158,33 @@ def evaluate_on_task_subsets(config, args: argparse.Namespace):
 def main(args: argparse.Namespace):
     # build and load all the needed task vectors at once
     if args.method == "paper_implementation":
-        space = {"alpha": tune.grid_search(list(x / 10.0 for x in range(1, 11)))}
+        space = {"alpha": tune.choice(list(x / 10.0 for x in range(1, 11)))}
         points_to_evaluate = [{"alpha": 0.3}]
         num_samples = 1
     elif args.method == "topk_zero":
         space = {
-            "alpha": tune.grid_search(list(x / 10.0 for x in range(1, 11))),
+            "alpha": tune.choice(list(x / 10.0 for x in range(1, 11))),
             "beta": tune.quniform(0.05, 0.4, 0.05),
         }
         points_to_evaluate = [{"alpha": 0.2, "beta": 0.15}]
         num_samples = 40
     elif args.method == "topk_init":
         space = {
-            "alpha": tune.grid_search(list(x / 10.0 for x in range(1, 11))),
+            "alpha": tune.choice(list(x / 10.0 for x in range(1, 11))),
             "beta": tune.quniform(0.05, 0.4, 0.05),
         }
         points_to_evaluate = [{"alpha": 0.2, "beta": 0.15}]
         num_samples = 40
     elif args.method == "topk_keep":
         space = {
-            "alpha": tune.grid_search(list(x / 10.0 for x in range(1, 11))),
+            "alpha": tune.choice(list(x / 10.0 for x in range(1, 11))),
             "beta": tune.quniform(0.05, 0.4, 0.05),
         }
         points_to_evaluate = [{"alpha": 0.2, "beta": 0.15}]
         num_samples = 40
     elif args.method == "middle_keep":
         space = {
-            "alpha": tune.grid_search(list(x / 10.0 for x in range(1, 11))),
+            "alpha": tune.choice(list(x / 10.0 for x in range(1, 11))),
             "beta": tune.quniform(0.05, 0.4, 0.05),
             "gamma": tune.quniform(0.001, 0.01, 0.001),
         }
