@@ -1,5 +1,6 @@
 import argparse
 from itertools import combinations
+from typing import List
 
 import torch
 from ray import air, tune
@@ -84,9 +85,9 @@ finetuned_acc = {
 }
 
 
-def evaluate_all_datasets(args: argparse.Namespace, image_encoder: torch.nn.Module) -> float:
+def evaluate_all_datasets(data_sets: List[str], image_encoder: torch.nn.Module) -> float:
     average_normalized_acc = 0.0
-    for dataset in args.data_sets:
+    for dataset in data_sets:
         results = eval_single_dataset(image_encoder, dataset, args)["top1"] * 100.0
         normalized_acc = (results / finetuned_acc[args.model][dataset]) * 100.0
         average_normalized_acc += normalized_acc
@@ -147,7 +148,10 @@ def evaluate_on_task_subsets(config, args: argparse.Namespace):
         task_vector_sum = sum(task_vectors)
         image_encoder = task_vector_sum.apply_to(args.pretrained_checkpoint, scaling_coef=config["alpha"])
 
-        avg_normalized_acc = evaluate_all_datasets(args=args, image_encoder=image_encoder)
+        if args.eval_on_partial_datasets:
+            avg_normalized_acc = evaluate_all_datasets(data_sets=data_subsets, image_encoder=image_encoder)
+        else:
+            avg_normalized_acc = evaluate_all_datasets(data_sets=args.data_sets, image_encoder=image_encoder)
         if index == 0:
             global_normalized_acc = avg_normalized_acc
         else:
@@ -198,7 +202,7 @@ def main(args: argparse.Namespace):
         time_attr="training_iteration",
         metric="global_normalized_acc",
         mode="max",
-        max_t=10,
+        max_t=20 if args.eval_on_partial_datasets else 10,
         grace_period=1,
         reduction_factor=8,
         brackets=1,
@@ -211,15 +215,13 @@ def main(args: argparse.Namespace):
         skip_duplicate=True,
     )
     algo = ConcurrencyLimiter(algo, max_concurrent=2)
+    project_name = "parameter_search_partial" if args.eval_on_partial_datasets else "parameter_search_full_dataset"
+    wandb_config = {"model": args.model, "method": args.method, "evaluation_depth": args.evaluation_depth}
     tuner = tune.Tuner(
         tune.with_resources(tune.with_parameters(evaluate_on_task_subsets, args=args), {"gpu": 0.5}),
         param_space=space,
         tune_config=tune.TuneConfig(num_samples=num_samples, scheduler=asha_scheduler, search_alg=algo),
-        run_config=air.RunConfig(
-            callbacks=[
-                WandbLoggerCallback(project=f"parameter_search_{args.model}_{args.method}_depth{args.evaluation_depth}")
-            ]
-        ),
+        run_config=air.RunConfig(callbacks=[WandbLoggerCallback(project=project_name, config=wandb_config)]),
     )
     tuner.fit()
 
