@@ -91,7 +91,7 @@ def evaluate_all_datasets(data_sets: List[str], image_encoder: torch.nn.Module) 
         results = eval_single_dataset(image_encoder, dataset, args)["top1"] * 100.0
         normalized_acc = (results / finetuned_acc[args.model][dataset]) * 100.0
         average_normalized_acc += normalized_acc
-    return average_normalized_acc / len(args.data_sets)
+    return average_normalized_acc / len(data_sets)
 
 
 def evaluate_on_task_subsets(config, args: argparse.Namespace):
@@ -164,8 +164,8 @@ def main(args: argparse.Namespace):
     # build and load all the needed task vectors at once
     if args.method == "paper_implementation":
         space = {"alpha": tune.uniform(0.1, 1)}
-        points_to_evaluate = [{"alpha": 0.3}]
-        num_samples = 10
+        points_to_evaluate = [{"alpha": 0.3}, {"alpha": 1.0 / args.evaluation_depth}]
+        num_samples = 15
     elif args.method == "topk_zero":
         space = {
             "alpha": tune.uniform(0.1, 1),
@@ -211,7 +211,7 @@ def main(args: argparse.Namespace):
         metric="global_normalized_acc",
         mode="max",
         points_to_evaluate=points_to_evaluate,
-        random_search_steps=3,
+        random_search_steps=6,
         skip_duplicate=True,
     )
     algo = ConcurrencyLimiter(algo, max_concurrent=2)
