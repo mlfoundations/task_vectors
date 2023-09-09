@@ -6,7 +6,8 @@ from ray import air, tune
 from ray.air import session
 from ray.air.integrations.wandb import WandbLoggerCallback
 from ray.tune.schedulers import ASHAScheduler
-from ray.tune.search.optuna import OptunaSearch
+from ray.tune.search.bayesopt import BayesOptSearch
+from ray.tune.search import ConcurrencyLimiter
 
 from src.eval import eval_single_dataset
 from src.task_vectors import (
@@ -158,38 +159,38 @@ def evaluate_on_task_subsets(config, args: argparse.Namespace):
 def main(args: argparse.Namespace):
     # build and load all the needed task vectors at once
     if args.method == "paper_implementation":
-        space = {"alpha": tune.choice(list(x / 10.0 for x in range(1, 11)))}
+        space = {"alpha": tune.uniform(0.1, 1)}
         points_to_evaluate = [{"alpha": 0.3}]
         num_samples = 10
     elif args.method == "topk_zero":
         space = {
-            "alpha": tune.choice(list(x / 10.0 for x in range(1, 11))),
-            "beta": tune.quniform(0.05, 0.4, 0.05),
+            "alpha": tune.uniform(0.1, 1),
+            "beta": tune.uniform(0.05, 0.4),
         }
         points_to_evaluate = [{"alpha": 0.2, "beta": 0.15}]
         num_samples = 40
     elif args.method == "topk_init":
         space = {
-            "alpha": tune.choice(list(x / 10.0 for x in range(1, 11))),
-            "beta": tune.quniform(0.05, 0.4, 0.05),
+            "alpha": tune.uniform(0.1, 1),
+            "beta": tune.uniform(0.05, 0.4),
         }
         points_to_evaluate = [{"alpha": 0.2, "beta": 0.15}]
         num_samples = 40
     elif args.method == "topk_keep":
         space = {
-            "alpha": tune.choice(list(x / 10.0 for x in range(1, 11))),
-            "beta": tune.quniform(0.05, 0.4, 0.05),
+            "alpha": tune.uniform(0.1, 1),
+            "beta": tune.uniform(0.05, 0.4),
         }
         points_to_evaluate = [{"alpha": 0.2, "beta": 0.15}]
         num_samples = 40
     elif args.method == "middle_keep":
         space = {
-            "alpha": tune.choice(list(x / 10.0 for x in range(1, 11))),
-            "beta": tune.quniform(0.05, 0.4, 0.05),
-            "gamma": tune.quniform(0.001, 0.01, 0.001),
+            "alpha": tune.uniform(0.1, 1),
+            "beta": tune.uniform(0.05, 0.4),
+            "gamma": tune.uniform(0.001, 0.01),
         }
         points_to_evaluate = [{"alpha": 0.2, "beta": 0.15, "gamma": 0.006}]
-        num_samples = 100
+        num_samples = 50
     else:
         raise ValueError("Unsupported method of task vectors.")
 
@@ -199,10 +200,17 @@ def main(args: argparse.Namespace):
         mode="max",
         max_t=10,
         grace_period=1,
-        reduction_factor=2,
+        reduction_factor=8,
         brackets=1,
     )
-    algo = OptunaSearch(metric="global_normalized_acc", mode="max", points_to_evaluate=points_to_evaluate)
+    algo = BayesOptSearch(
+        metric="global_normalized_acc",
+        mode="max",
+        points_to_evaluate=points_to_evaluate,
+        random_search_steps=3,
+        skip_duplicate=True,
+    )
+    algo = ConcurrencyLimiter(algo, max_concurrent=2)
     tuner = tune.Tuner(
         tune.with_resources(tune.with_parameters(evaluate_on_task_subsets, args=args), {"gpu": 0.5}),
         param_space=space,
