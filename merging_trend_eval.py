@@ -164,8 +164,9 @@ def main(args: argparse.Namespace):
             image_encoder = task_vector_sum.apply_to(args.pretrained_checkpoint, scaling_coef=alpha)
 
             if not args.eval_on_imagenet_only:
-                for dataset in data_subsets:
-                    if len(data_subsets) == 0:
+                evaluation_dataset = data_subsets if args.single_level_eval else args.data_sets
+                for dataset in evaluation_dataset:
+                    if len(evaluation_dataset) == 0:
                         try:
                             results = zeroshot_acc[args.model][dataset]
                         except KeyError:
@@ -186,8 +187,8 @@ def main(args: argparse.Namespace):
                     average_normalized_acc += normalized_acc
                     average_acc += results
 
-                average_acc /= len(data_subsets)
-                average_normalized_acc /= len(data_subsets)
+                average_acc /= len(evaluation_dataset)
+                average_normalized_acc /= len(evaluation_dataset)
                 global_average_acc += average_acc
                 global_average_normalized_acc += average_normalized_acc
                 wandb.log(
@@ -338,6 +339,13 @@ if __name__ == "__main__":
     parser.add_argument(
         "--eval_on_imagenet_also",
         help="Run imagenet evaluation in addition to all other evaluations.",
+        default=False,
+        action="store_true",
+    )
+
+    parser.add_argument(
+        "--eval_on_partial_datasets",
+        help="If used, we evaluate only on the datasets relevant to the task vectors as opposed to all the datasets.",
         default=False,
         action="store_true",
     )
