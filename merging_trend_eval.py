@@ -164,7 +164,7 @@ def main(args: argparse.Namespace):
             image_encoder = task_vector_sum.apply_to(args.pretrained_checkpoint, scaling_coef=alpha)
 
             if not args.eval_on_imagenet_only:
-                evaluation_dataset = data_subsets if args.single_level_eval else args.data_sets
+                evaluation_dataset = data_subsets if args.eval_on_partial_datasets else args.data_sets
                 for dataset in evaluation_dataset:
                     if len(evaluation_dataset) == 0:
                         try:
