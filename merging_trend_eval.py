@@ -93,6 +93,7 @@ def main(args: argparse.Namespace):
             "method": args.run_name,
             "beta": args.beta,
             "gamma": args.gamma,
+            "eval_type": "partial" if args.eval_on_partial_datasets else "full",
         },
     )
     # build and load all the needed task vectors at once
