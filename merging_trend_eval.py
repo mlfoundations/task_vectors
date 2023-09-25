@@ -12,6 +12,7 @@ from src.task_vectors import (
     TaskVectorTopKInit,
     TaskVectorTopKKeep,
     TaskVectorMiddleKeep,
+    TaskVectorRandomMask,
 )
 
 zeroshot_acc = {
@@ -142,6 +143,15 @@ def main(args: argparse.Namespace):
             )
             for dataset in args.data_sets
         }
+    elif args.run_name == "random":
+        task_vectors_dict = {
+            dataset: TaskVectorRandomMask(
+                pretrained_checkpoint=args.pretrained_checkpoint,
+                finetuned_checkpoint=f"{args.checkpoint_path}/{args.model}/{dataset}/finetuned.pt",
+                keep=args.beta,
+            )
+            for dataset in args.data_sets
+        }
     else:
         raise ValueError("Unsupported method of task vectors.")
 
@@ -267,7 +277,7 @@ if __name__ == "__main__":
         help="Optional name for the run.",
         type=str,
         default="paper_implementation",
-        choices=["paper_implementation", "topk_zero", "topk_init", "topk_keep", "middle_keep"],
+        choices=["paper_implementation", "topk_zero", "topk_init", "topk_keep", "middle_keep", "random"],
     )
     parser.add_argument(
         "--checkpoint_path",

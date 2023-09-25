@@ -172,3 +172,19 @@ class TaskVectorMiddleKeep(TaskVectorABC):
             mask.scatter_(len(tensor.shape) - 1, masked_indices, 0.0)
 
             return mask * tensor
+
+
+class TaskVectorRandomMask(TaskVectorABC):
+    def __init__(self, pretrained_checkpoint=None, finetuned_checkpoint=None, vector=None, keep: float = 0):
+        super().__init__(pretrained_checkpoint, finetuned_checkpoint, vector)
+        self.keep = keep
+        with torch.no_grad():
+            for key, value in self.vector.items():
+                self.vector[key] = self.mask_keep_random(value)
+
+    def mask_keep_random(self, tensor: Tensor) -> Tensor:
+        if len(tensor.shape) == 0:
+            return tensor
+        else:
+            mask = torch.rand(tensor.shape) < self.keep
+            return mask * tensor
