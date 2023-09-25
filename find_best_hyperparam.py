@@ -176,6 +176,10 @@ def main(args: argparse.Namespace):
         space = {"alpha": tune.uniform(0.1, 1)}
         points_to_evaluate = [{"alpha": 0.3}, {"alpha": 1.0 / args.evaluation_depth}]
         num_samples = 15
+    elif args.method == "random":
+        space = {"alpha": tune.uniform(0.1, 1)}
+        points_to_evaluate = [{"alpha": 0.3}, {"alpha": 1.0 / args.evaluation_depth}]
+        num_samples = 10
     elif args.method == "topk_zero":
         space = {
             "alpha": tune.uniform(0.1, 1),
