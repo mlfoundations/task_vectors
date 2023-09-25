@@ -140,7 +140,7 @@ def evaluate_on_task_subsets(config, args: argparse.Namespace):
             )
             for dataset in args.data_sets
         }
-    elif args.run_name == "random":
+    elif args.method == "random":
         task_vectors_dict = {
             dataset: TaskVectorRandomMask(
                 pretrained_checkpoint=args.pretrained_checkpoint,
@@ -249,7 +249,7 @@ if __name__ == "__main__":
         help="Optional name for the run.",
         type=str,
         default="paper_implementation",
-        choices=["paper_implementation", "topk_zero", "topk_init", "topk_keep", "middle_keep"],
+        choices=["paper_implementation", "topk_zero", "topk_init", "topk_keep", "middle_keep", "random"],
     )
     parser.add_argument(
         "--checkpoint_path",
