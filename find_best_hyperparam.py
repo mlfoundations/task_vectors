@@ -17,6 +17,7 @@ from src.task_vectors import (
     TaskVectorTopKInit,
     TaskVectorTopKKeep,
     TaskVectorMiddleKeep,
+    TaskVectorRandomMask,
 )
 
 zeroshot_acc = {
@@ -136,6 +137,15 @@ def evaluate_on_task_subsets(config, args: argparse.Namespace):
                 finetuned_checkpoint=f"{args.checkpoint_path}/{args.model}/{dataset}/finetuned.pt",
                 top_k_keep=config["beta"],
                 top_k_remove=config["gamma"],
+            )
+            for dataset in args.data_sets
+        }
+    elif args.run_name == "random":
+        task_vectors_dict = {
+            dataset: TaskVectorRandomMask(
+                pretrained_checkpoint=args.pretrained_checkpoint,
+                finetuned_checkpoint=f"{args.checkpoint_path}/{args.model}/{dataset}/finetuned.pt",
+                keep=args.beta,
             )
             for dataset in args.data_sets
         }
