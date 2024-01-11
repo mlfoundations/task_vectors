@@ -12,7 +12,7 @@ from src.datasets.cifar100 import CIFAR100
 from src.datasets.dtd import DTD
 from src.datasets.eurosat import EuroSAT, EuroSATVal
 from src.datasets.gtsrb import GTSRB
-from src.datasets.imagenet import ImageNet
+from src.datasets.imagenet import ImageNetInit
 from src.datasets.mnist import MNIST
 from src.datasets.resisc45 import RESISC45
 from src.datasets.stl10 import STL10
